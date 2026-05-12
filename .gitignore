@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+data/
+results/trajectories/*.txt
+results/plots/*.png
+results/tables/*.csv
+*.egg-info/
+.env

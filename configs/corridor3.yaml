@@ -1,0 +1,22 @@
+# Room2 sequence — full ground truth available
+seq_name: corridor3
+dataset_root: data/corridor3
+cam: cam0
+seed: 0
+
+vo:
+  detector: ORB
+  n_features: 1000
+  min_matches: 30
+  ransac_threshold: 1.0
+  window_size: 3          # keyframes in local BA
+
+vio:
+  window_size: 5          # keyframes in sliding-window
+  imu_weight: 1.0
+  gravity: [0.0, 0.0, -9.81]
+
+eval:
+  align: se3             # VO uses Sim(3), VIO uses SE(3)
+  rpe_segment_len: 100    # metres
+  rpe_rot_threshold: 60   # degrees
