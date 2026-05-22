@@ -11,14 +11,11 @@ def umeyama_alignment(traj_est: np.ndarray,
                       allow_scale: bool = True):
     """Closed-form Sim(3) / SE(3) alignment of two XYZ trajectory sets.
 
-    Implements Umeyama (1991) "Least-Squares Estimation of Transformation
-    Parameters Between Two Point Patterns":
+    Minimises (1/N) Σ ||q_i − (s R p_i + t)||² over (s, R, t) via SVD:
 
-      eq. (6)  minimise (1/N) Σ ||q_i − (s R p_i + t)||²
-
-      eq. (7)  Σ_PQ = UDV^T  ⟹  R = U diag(1,1,det(U)det(V)) V^T
-                              s = (1/σ²_P) trace(diag(S) D)
-                              t = μ_Q − s R μ_P
+      Σ_PQ = UDV^T  ⟹  R = U diag(1,1,det(U)det(V)) V^T
+                          s = (1/σ²_P) trace(diag(S) D)
+                          t = μ_Q − s R μ_P
 
     Parameters
     ----------
@@ -45,7 +42,7 @@ def umeyama_alignment(traj_est: np.ndarray,
 
     var_est = float(np.sum(est_c ** 2) / N)
 
-    # Cross-covariance Σ_PQ (eq. 38): (3, 3), gt on left, est on right
+    # Cross-covariance Σ_PQ: (3, 3), gt on left, est on right
     sigma = (gt_c.T @ est_c) / N
 
     U, S, Vt = np.linalg.svd(sigma)

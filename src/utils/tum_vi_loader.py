@@ -101,13 +101,20 @@ def load_kalibr_yaml(yaml_path: str) -> tuple:
     )
 
     # ── IMU ─────────────────────────────────────────────────
-    imu_data = data.get("imu0", {})
+    # Try a sibling imu_config.yaml (TUM VI DSO export) before the camchain entry.
+    imu_cfg_path = yaml_path.parent / "imu_config.yaml"
+    if imu_cfg_path.exists():
+        with open(imu_cfg_path) as _f:
+            imu_raw = yaml.safe_load(_f)
+    else:
+        imu_raw = data.get("imu0", {})
+
     imu_calib = IMUCalib(
-        accelerometer_noise_density=imu_data.get("accelerometer_noise_density", 2.0e-3),
-        accelerometer_random_walk=imu_data.get("accelerometer_random_walk", 3.0e-3),
-        gyroscope_noise_density=imu_data.get("gyroscope_noise_density", 1.6e-4),
-        gyroscope_random_walk=imu_data.get("gyroscope_random_walk", 1.9e-5),
-        update_rate=imu_data.get("update_rate", 200.0)
+        accelerometer_noise_density=imu_raw.get("accelerometer_noise_density", 2.0e-3),
+        accelerometer_random_walk=imu_raw.get("accelerometer_random_walk", 3.0e-3),
+        gyroscope_noise_density=imu_raw.get("gyroscope_noise_density", 1.6e-4),
+        gyroscope_random_walk=imu_raw.get("gyroscope_random_walk", 1.9e-5),
+        update_rate=imu_raw.get("update_rate", 200.0)
     )
 
     return cam_calib, imu_calib
@@ -289,10 +296,11 @@ def pose_to_matrix(row: np.ndarray) -> np.ndarray:
 
 
 def undistort_image(img: np.ndarray, calib: CameraCalib) -> np.ndarray:
-    """Undistort using radtan or equidistant model."""
-    if calib.dist_model == "equidist":
-        return cv2.fisheye.undistortImage(img, calib.K, calib.dist_coeffs,
-                                          Knew=calib.K)
+    """Undistort using radtan or equidistant (Kannala-Brandt) model."""
+    if calib.dist_model in ("equidist", "equidistant"):
+        # TUM VI uses Kalibr's equidistant model → cv2.fisheye (4 coefficients)
+        d = calib.dist_coeffs[:4].reshape(1, 4).astype(np.float64)
+        return cv2.fisheye.undistortImage(img, calib.K, d, Knew=calib.K)
     else:
         return cv2.undistort(img, calib.K, calib.dist_coeffs)
 
@@ -376,6 +384,7 @@ class TUMVIDataset:
                 Path(seq_dir) / "camchain-imucam.yaml",
                 Path(seq_dir) / "calib" / "camchain-imucam.yaml",
                 Path(seq_dir) / "mav0" / "camchain-imucam.yaml",
+                Path(seq_dir) / "dso" / "camchain.yaml",   # TUM VI DSO export
             ]
             calib_yaml = next((str(g) for g in guesses if g.exists()), "NOTFOUND")
 

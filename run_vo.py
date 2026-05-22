@@ -76,6 +76,10 @@ def main():
     method        = vo_cfg.get("detector", "ORB")
     n_features    = vo_cfg.get("n_features", 1000)
     min_matches   = vo_cfg.get("min_matches", 30)
+    # min_tracks controls how many features the LK tracker maintains before
+    # re-detecting.  Kept separate from min_matches so a low min_matches
+    # (used for essential-matrix / PnP thresholds) does not starve tracking.
+    min_tracks    = vo_cfg.get("min_tracks", max(min_matches, 30))
     ransac_thresh = float(vo_cfg.get("ransac_threshold", 1.0))
     seq_name      = cfg.get("seq_name", Path(args.seq).name)
 
@@ -87,10 +91,10 @@ def main():
 
     # ── Pipeline objects ──────────────────────────────────────────────────
     detector = FeatureDetector(method=method, n_features=n_features, seed=seed)
-    tracker  = FeatureTracker(detector, min_tracks=min_matches)
+    tracker  = FeatureTracker(detector, min_tracks=min_tracks)
     epipolar = EpipolarGeometry(K)
     solver   = PnPSolver(K, ransac_thresh=ransac_thresh * 4.0,
-                         confidence=0.999, min_inliers=12)
+                         confidence=0.999, min_inliers=8)
     ba       = MotionOnlyBA(K, loss="huber", huber_delta=1.0)
 
     # ── State ─────────────────────────────────────────────────────────────
@@ -99,6 +103,7 @@ def main():
     n_failures:    int  = 0
     t_wall_start         = time.time()
     T_prev               = np.eye(4, dtype=np.float64)   # updated each frame
+    motion_hist:   list = []         # recent frame-to-frame camera displacements
 
     try:
         # ── 3. Initialisation — frames 0 and 1 ───────────────────────────
@@ -125,8 +130,12 @@ def main():
         pts3d_raw, valid = _triangulate_with_mask(K, R, t, pts1_in, pts2_in)
         pts3d_good = pts3d_raw[valid]
 
-        # Scale: median depth in cam-0 frame (= world frame since T_0 = I)
-        scale = epipolar.compute_scale(pts3d_good)
+        # Normalize so the median landmark depth is 1 unit.
+        # compute_scale returns the raw median depth in unit-baseline coords;
+        # multiplying both t and pts3d by 1/median_depth keeps them consistent
+        # and avoids the depth blowing up to median_depth^2 (~4 000 000 m).
+        median_d = epipolar.compute_scale(pts3d_good)
+        scale = 1.0 / median_d if median_d > 1e-6 else 1.0
 
         T_0 = np.eye(4, dtype=np.float64)
         T_1 = _T_from_Rt(R, t.ravel() * scale)
@@ -140,7 +149,7 @@ def main():
         trajectory.append((f1["timestamp"], T_1))
         T_prev = T_1
 
-        print(f"[Init]  scale={scale:.4f} m  "
+        print(f"[Init]  scale={scale:.6f}  median_depth={median_d:.2f}  "
               f"landmarks={len(landmark_map)}  "
               f"inliers={int(inlier_mask.sum())}")
 
@@ -159,6 +168,50 @@ def main():
             n_known = int(known_mask.sum())
 
             if n_known < solver.min_inliers:
+                # Recovery: seed new landmarks so the next frame can PnP.
+                # Uses the motion-history scale to triangulate — but only keeps
+                # landmarks whose depth in the prev-camera frame is within a
+                # sane range.  Degenerate essential-matrix estimates produce
+                # near-infinite depths (colinear motion / too-few features);
+                # the depth cap prevents those from entering the map and
+                # causing a million-metre cascade.
+                n_prev = len(prev_pts_t)
+                if n_prev >= min_matches and len(motion_hist) >= 5:
+                    try:
+                        avg_dist = float(np.median(motion_hist))
+                        if avg_dist > 1e-8:
+                            E_r, em_r = epipolar.estimate_essential(
+                                prev_pts_t[:n_prev], curr_pts_t[:n_prev],
+                                ransac_thresh=ransac_thresh,
+                            )
+                            R_r, t_r, _ = epipolar.recover_pose(
+                                E_r, prev_pts_t[:n_prev], curr_pts_t[:n_prev], em_r
+                            )
+                            t_scaled = t_r.ravel() * avg_dist
+                            in_r = em_r.ravel().astype(bool)
+                            new3d_r, v_r = _triangulate_with_mask(
+                                K, R_r, t_scaled,
+                                prev_pts_t[:n_prev][in_r],
+                                curr_pts_t[:n_prev][in_r],
+                            )
+                            if v_r.sum() >= solver.min_inliers:
+                                # Depth filter: [0.01, 20] world units.
+                                # Depths outside this range signal degenerate
+                                # triangulation (bad E, colinear baseline, etc.).
+                                depths = new3d_r[v_r][:, 2]
+                                depth_ok = (depths > 0.01) & (depths < 20.0)
+                                if depth_ok.sum() >= solver.min_inliers:
+                                    T_prev_wc = np.linalg.inv(T_prev)
+                                    pts_good  = new3d_r[v_r][depth_ok]
+                                    pts_world_r = (
+                                        T_prev_wc[:3, :3] @ pts_good.T
+                                        + T_prev_wc[:3, 3:]
+                                    ).T
+                                    ids_ok = ids_t[:n_prev][in_r][v_r][depth_ok]
+                                    for tid, pt in zip(ids_ok, pts_world_r):
+                                        landmark_map[int(tid)] = pt
+                    except Exception:
+                        pass
                 n_failures += 1
                 print(f"[Frame {idx:4d}] SKIP  — only {n_known} landmarks visible")
                 trajectory.append((ts, T_prev))
@@ -210,6 +263,12 @@ def main():
                             landmark_map[int(tid)] = pt
 
             trajectory.append((ts, T_refined))
+            # Record camera displacement for recovery scale estimation.
+            cam_prev = np.linalg.inv(T_prev)[:3, 3]
+            cam_curr = np.linalg.inv(T_refined)[:3, 3]
+            motion_hist.append(float(np.linalg.norm(cam_curr - cam_prev)))
+            if len(motion_hist) > 20:
+                motion_hist.pop(0)
             T_prev = T_refined
 
             if idx % 50 == 0:

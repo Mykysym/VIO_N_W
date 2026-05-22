@@ -7,8 +7,8 @@ from pathlib import Path
 from src.frontend.feature_detector import FeatureDetector
 
 _DEFAULT_LK = dict(
-    winSize=(21, 21),
-    maxLevel=3,
+    winSize=(31, 31),
+    maxLevel=4,
     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 30, 0.01),
 )
 

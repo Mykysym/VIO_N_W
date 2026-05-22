@@ -16,7 +16,7 @@ class EpipolarGeometry:
                            confidence: float = 0.999):
         """Estimate the essential matrix E via RANSAC.
 
-        Implements the epipolar constraint (eq. 1):
+        Implements the epipolar constraint:
 
             x'^T E x = 0
 
@@ -61,7 +61,7 @@ class EpipolarGeometry:
     def recover_pose(self, E, pts1, pts2, mask):
         """Decompose E into R and unit-translation t via the chirality check.
 
-        Applies the decomposition (eq. 2):
+        Applies the standard decomposition:
 
             E = [t]_x R
 

@@ -1,4 +1,4 @@
-# Room2 sequence — full ground truth available
+# Corridor3 sequence — partial ground truth (start/end only)
 seq_name: corridor3
 dataset_root: data/corridor3
 cam: cam0
@@ -9,14 +9,19 @@ vo:
   n_features: 1000
   min_matches: 30
   ransac_threshold: 1.0
-  window_size: 3          # keyframes in local BA
+  window_size: 10
 
 vio:
-  window_size: 5          # keyframes in sliding-window
-  imu_weight: 1.0
-  gravity: [0.0, 0.0, -9.81]
+  window_size: 10
+  gravity: [0.0, 9.81, 0.0]
+  min_init_frames: 30
+  max_init_frames: 300
+  kf_parallax_thresh: 30.0
+  kf_min_tracks: 80
+  kf_max_interval: 5
+  imu_weight: 0.009
 
 eval:
-  align: se3             # VO uses Sim(3), VIO uses SE(3)
-  rpe_segment_len: 100    # metres
-  rpe_rot_threshold: 60   # degrees
+  align: se3 # VO uses Sim(3), VIO uses SE(3)
+  rpe_segment_len: 100 # metres
+  rpe_rot_threshold: 60 # degrees

@@ -1,4 +1,4 @@
-"""Motion-only bundle adjustment via Levenberg-Marquardt (SciPy)."""
+"""Motion-only bundle adjustment via Levenberg-Marquardt."""
 
 import cv2
 import numpy as np
@@ -12,15 +12,15 @@ def project(K: np.ndarray,
     """Project (N,3) world points through K[R|t] into pixel coordinates.
 
     Used by the BA residual function and for external reprojection checks.
-    Points behind the camera (z ≤ 0) have their depth clamped to 1e-6 so
+    Points behind the camera (z <= 0) have their depth clamped to 1e-6 so
     the Jacobian stays finite; they will produce large residuals and are
     effectively down-weighted by the Huber loss.
 
     Returns (N, 2) float64 pixel coordinates.
     """
-    pts_cam = (R @ pts3d.T + t.reshape(3, 1)).T      # (N, 3)
+    pts_cam = (R @ pts3d.T + t.reshape(3, 1)).T  # (N, 3)
     z = np.maximum(pts_cam[:, 2], 1e-6)
-    uvw = (K @ pts_cam.T).T                           # (N, 3)
+    uvw = (K @ pts_cam.T).T                      # (N, 3)
     return uvw[:, :2] / uvw[:, 2:3]
 
 
@@ -82,9 +82,6 @@ class MotionOnlyBA:
 
         pose0 = _T_to_pose_vec(T_init)
 
-        # SciPy "lm" method does not accept a loss argument; apply Huber
-        # manually via "soft_l1" which approximates it, or use "huber" with
-        # the "trf" method.  We use trf+huber when requested, lm otherwise.
         if self.loss == "huber":
             method = "trf"
             loss   = "huber"
@@ -176,7 +173,7 @@ if __name__ == "__main__":
     print(f"Points used: {mask.sum()}")
 
     # ── perturbed initial pose ────────────────────────────────────────────
-    # Add 2° rotation noise and 2 cm translation noise so the optimiser
+    # Add 2 degree rotation noise and 2 cm translation noise so the optimiser
     # has something to do.
     perturb_R, _ = cv2.Rodrigues(np.array([0.035, -0.02, 0.01]))
     T_init = T_gt.copy()
