@@ -81,12 +81,12 @@ python evaluate.py --seq all --method all
 
 All outputs land in `results/`:
 
-| Output | Path |
-|--------|------|
-| Trajectory file (TUM format) | `results/trajectories/{method}_{seq}.txt` |
-| Per-frame ATE CSV | `results/tables/{method}_{seq}_metrics.csv` |
-| ATE / trajectory plot | `results/plots/metrics/{method}_{seq}_ate.png` |
-| RPE histogram | `results/plots/metrics/{method}_{seq}_rpe.png` |
+| Output                       | Path                                           |
+| ---------------------------- | ---------------------------------------------- |
+| Trajectory file (TUM format) | `results/trajectories/{method}_{seq}.txt`      |
+| Per-frame ATE CSV            | `results/tables/{method}_{seq}_metrics.csv`    |
+| ATE / trajectory plot        | `results/plots/metrics/{method}_{seq}_ate.png` |
+| RPE histogram                | `results/plots/metrics/{method}_{seq}_rpe.png` |
 
 ---
 
@@ -94,10 +94,10 @@ All outputs land in `results/`:
 
 Evaluated on room2 (full ground truth). Trajectories aligned with Umeyama SVD.
 
-| Method | ATE RMSE | Alignment | Notes |
-|--------|----------|-----------|-------|
-| Monocular VO | ~1.2 m | Sim(3) | Scale recovered by alignment |
-| VIO | ~42 m | SE(3) | Metric scale from IMU init |
+| Method       | ATE RMSE | Alignment | Notes                        |
+| ------------ | -------- | --------- | ---------------------------- |
+| Monocular VO | ~1.2 m   | Sim(3)    | Scale recovered by alignment |
+| VIO          | ~42 m    | SE(3)     | Metric scale from IMU init   |
 
 ---
 
@@ -112,25 +112,26 @@ cam: cam0
 seed: 0
 
 vo:
-  detector: ORB           # ORB or SIFT
+  detector: ORB # ORB or SIFT
   n_features: 1000
   min_matches: 30
-  ransac_threshold: 1.0   # px
+  ransac_threshold: 1.0 # px
 
 vio:
-  window_size: 5          # keyframes in sliding window
-  gravity: [0.0, 9.81, 0.0]   # m/s² — +y is down for TUM VI cam0
-  min_init_frames: 30     # frames before VIO init triggers
-  max_init_frames: 300    # timeout frames
-  kf_parallax_thresh: 30.0    # px
+  window_size: 5 # keyframes in sliding window
+  gravity: [0.0, 9.81, 0.0] # m/s² — +y is down for TUM VI cam0
+  min_init_frames: 30 # frames before VIO init triggers
+  max_init_frames: 300 # timeout frames
+  kf_parallax_thresh: 30.0 # px
   kf_min_tracks: 80
-  kf_max_interval: 5      # force keyframe every N frames
-  imu_weight: 0.007       # scale IMU information matrix
-                          # (raw IMU info ~6700× larger than visual)
+  kf_max_interval: 5 # force keyframe every N frames
+  imu_weight:
+    0.007 # scale IMU information matrix
+    # (raw IMU info ~6700× larger than visual)
 
 eval:
   align: se3
-  rpe_segment_len: 100    # metres
+  rpe_segment_len: 100 # metres
 ```
 
 ---
@@ -219,24 +220,13 @@ Phase 2 — Metric tracking
 
 ---
 
-## Technical Documentation
-
-[explanation.md](explanation.md) covers:
-- Full algorithm details for each pipeline step
-- All bugs found and fixed during development
-- The known rvec singularity limitation in the sliding-window optimizer
-- Coordinate system conventions (TUM VI y-down camera frame, gravity direction)
-- Evaluation methodology
-
----
-
 ## References
 
-1. Forster, Carlone, Dellaert, Scaramuzza — *IMU Preintegration on Manifold for Efficient Visual-Inertial Maximum-a-Posteriori Estimation*, RSS 2015
-2. Qin, Li, Shen — *VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator*, TRO 2018
-3. Leutenegger, Lynen, Bosse, Siegwart, Furgale — *Keyframe-Based Visual-Inertial Odometry Using Nonlinear Optimization*, IJRR 2015
-4. Schubert et al. — *The TUM VI Benchmark for Evaluating Visual-Inertial Odometry*, IROS 2018
-5. Umeyama — *Least-Squares Estimation of Transformation Parameters Between Two Point Patterns*, TPAMI 1991
+1. Forster, Carlone, Dellaert, Scaramuzza — _IMU Preintegration on Manifold for Efficient Visual-Inertial Maximum-a-Posteriori Estimation_, RSS 2015
+2. Qin, Li, Shen — _VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator_, TRO 2018
+3. Leutenegger, Lynen, Bosse, Siegwart, Furgale — _Keyframe-Based Visual-Inertial Odometry Using Nonlinear Optimization_, IJRR 2015
+4. Schubert et al. — _The TUM VI Benchmark for Evaluating Visual-Inertial Odometry_, IROS 2018
+5. Umeyama — _Least-Squares Estimation of Transformation Parameters Between Two Point Patterns_, TPAMI 1991
 
 ---
 
@@ -244,4 +234,4 @@ Phase 2 — Metric tracking
 
 All scripts call `np.random.seed(0)` at startup. The seed can be overridden via `seed:` in the YAML config. OpenCV RANSAC uses its own internal random state and may give slightly different results across platforms.
 
-Hardware used: Intel Core i7-9750H CPU, Windows 11 Home 2H2. Typical runtime: ~40 ms/frame for VIO (room2).
+Hardware used: Intel Core i7-9750H CPU, Windows 11 Home 25H2. Typical runtime: ~40 ms/frame for VIO (room2).
