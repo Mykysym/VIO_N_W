@@ -222,11 +222,29 @@ Phase 2 — Metric tracking
 
 ## References
 
-1. Forster, Carlone, Dellaert, Scaramuzza — _IMU Preintegration on Manifold for Efficient Visual-Inertial Maximum-a-Posteriori Estimation_, RSS 2015
-2. Qin, Li, Shen — _VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator_, TRO 2018
-3. Leutenegger, Lynen, Bosse, Siegwart, Furgale — _Keyframe-Based Visual-Inertial Odometry Using Nonlinear Optimization_, IJRR 2015
-4. Schubert et al. — _The TUM VI Benchmark for Evaluating Visual-Inertial Odometry_, IROS 2018
-5. Umeyama — _Least-Squares Estimation of Transformation Parameters Between Two Point Patterns_, TPAMI 1991
+1. D. Schubert, T. Goll, N. Demmel, V. Usenko, J. St¨uckler, and D. Cremers,
+“The TUM VI Benchmark for Evaluating Visual-Inertial Odometry,”
+International Conference on Intelligent Robots and Systems (IROS), 2018.
+2. A. I. Mourikis and S. I. Roumeliotis, “A Multi-State Constraint Kalman
+Filter for Vision-aided Inertial Navigation,” in Proceedings 2007 IEEE
+International Conference on Robotics and Automation. IEEE, 2007, pp.
+3565–3572.
+3. S. Leutenegger, S. Lynen, M. Bosse, R. Siegwart, and P. Furgale,
+“Keyframe-based visual–inertial odometry using nonlinear optimization,”
+The International Journal of Robotics Research, vol. 34, no. 3, pp. 314–
+334, 2015.
+4. T. Qin, P. Li, and S. Shen, “VINS-Mono: A Robust and Versatile Monocular
+Visual-Inertial State Estimator,” IEEE Transactions on Robotics,
+vol. 34, no. 4, pp. 1004–1020, 2018.
+5. C. Forster, L. Carlone, F. Dellaert, and D. Scaramuzza, “IMU Preintegration
+on Manifold for Efficient Visual-Inertial Maximum-a-Posteriori
+Estimation,” in Robotics: Science and Systems (RSS), 2015.
+6. E. Rublee, V. Rabaud, K. Konolige, and G. Bradski, “ORB: An efficient
+alternative to SIFT or SURF,” in 2011 International conference on
+computer vision. Ieee, 2011, pp. 2564–2571.
+7. B. D. Lucas and T. Kanade, “An iterative image registration technique
+with an application to stereo vision,” in Proceedings of imaging understanding
+workshop, 1981, pp. 121–130.
 
 ---
 
