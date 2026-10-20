@@ -14,9 +14,9 @@ import time
 import traceback
 
 import cv2
+import matplotlib
 import numpy as np
 import yaml
-import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -26,9 +26,9 @@ np.random.seed(0)
 from src.utils.tum_vi_loader        import TUMVIDataset
 from src.utils.trajectory_io        import save_tum_trajectory
 from src.frontend.feature_detector  import FeatureDetector
-from src.frontend.feature_tracker   import FeatureTracker
 from src.frontend.epipolar          import EpipolarGeometry
 from src.backend.pnp_solver         import PnPSolver
+from src.frontend.feature_tracker   import FeatureTracker
 # from src.backend.bundle_adjustment  import MotionOnlyBA
 from src.backend.imu_preintegration import IMUPreintegration, Exp
 from src.backend.vio_initializer    import VIOInitializer
