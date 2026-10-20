@@ -7,9 +7,9 @@ import time
 import traceback
 
 import cv2
+import matplotlib
 import numpy as np
 import yaml
-import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -18,10 +18,10 @@ np.random.seed(0)
 
 from src.utils.tum_vi_loader  import TUMVIDataset
 from src.utils.trajectory_io  import save_tum_trajectory
-from src.frontend.feature_detector import FeatureDetector
-from src.frontend.feature_tracker  import FeatureTracker
 from src.frontend.epipolar         import EpipolarGeometry
 from src.backend.pnp_solver        import PnPSolver
+from src.frontend.feature_detector import FeatureDetector
+from src.frontend.feature_tracker  import FeatureTracker
 from src.backend.bundle_adjustment import MotionOnlyBA
 
 
@@ -108,8 +108,8 @@ def main():
     try:
         # ── 3. Initialisation — frames 0 and 1 ───────────────────────────
         frame_iter = ds.iter_frames()
-        f0 = next(frame_iter)
         f1 = next(frame_iter)
+        f0 = next(frame_iter)
         img0, img1 = f0["image"], f1["image"]
 
         # Init tracker on frame 0; track to frame 1 to get correspondences
