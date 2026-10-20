@@ -120,8 +120,8 @@ vo:
 vio:
   window_size: 5 # keyframes in sliding window
   gravity: [0.0, 9.81, 0.0] # m/s² — +y is down for TUM VI cam0
-  min_init_frames: 30 # frames before VIO init triggers
   max_init_frames: 300 # timeout frames
+  min_init_frames: 30 # frames before VIO init triggers
   kf_parallax_thresh: 30.0 # px
   kf_min_tracks: 80
   kf_max_interval: 5 # force keyframe every N frames
